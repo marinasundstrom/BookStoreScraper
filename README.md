@@ -6,6 +6,8 @@ The project is coded in C#/.NET, and for HTML parsing it uses [AngleSharp](https
 
 After running, check the "Output" directory, next to the executable, for the result.
 
+Refactoring on-going in [develop](https://github.com/marinasundstrom/BookStoreScraper/tree/develop) branch.
+
 ![Screenshot](screenshot.png)
 
 ## Overview 
