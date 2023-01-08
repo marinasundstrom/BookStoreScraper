@@ -1,7 +1,6 @@
-﻿using System;
+﻿using System.Diagnostics;
 using System.Reflection;
 using AngleSharp;
-using AngleSharp.Browser.Dom;
 using AngleSharp.Dom;
 using Microsoft.Extensions.Logging;
 
@@ -48,7 +47,15 @@ public sealed class Scraper : IDisposable
 
     public async Task Scrape()
     {
-        await ScrapeDocument($"{baseUrl}/index.html");
+        string startPageUrl = $"{baseUrl}/index.html";
+
+        var timestampStart = Stopwatch.GetTimestamp();
+
+        await ScrapeDocument(startPageUrl);
+
+        var elapsedTime = Stopwatch.GetElapsedTime(timestampStart);
+
+        logger.LogInformation($"Completed in {elapsedTime}");
 
         hostApplicationLifetime.StopApplication();
     }
@@ -59,7 +66,7 @@ public sealed class Scraper : IDisposable
 
         if (readPages.Contains(url))
         {
-            logger.LogInformation($"Already exists {url}");
+            logger.LogInformation($"Already exists: {url}");
 
             return;
         }
@@ -68,7 +75,7 @@ public sealed class Scraper : IDisposable
 
         NavigateTo(url);
 
-        logger.LogInformation($"Downloading {url}");
+        logger.LogInformation($"Downloading: {url}");
 
         var stream = await DownloadFileAsStream(url);
 
