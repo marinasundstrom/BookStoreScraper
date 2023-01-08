@@ -139,7 +139,7 @@ public sealed class Scraper : IDisposable
 
         CreateDirectory(destFilePath);
 
-        await stream.WriteToFileAsync(destFilePath);
+        await stream.WriteToFileAsync(destFilePath, cancellationToken);
 
         logger.LogInformation($"Processing document");
 
@@ -226,7 +226,7 @@ public sealed class Scraper : IDisposable
 
         CreateDirectory(destFilePath);
 
-        await stream.WriteToFileAsync(destFilePath);
+        await stream.WriteToFileAsync(destFilePath, cancellationToken);
 
         logger.LogInformation($"Saved: {scriptElementSrc}");
     }
@@ -273,7 +273,7 @@ public sealed class Scraper : IDisposable
 
         CreateDirectory(destFilePath);
 
-        await stream.WriteToFileAsync(destFilePath);
+        await stream.WriteToFileAsync(destFilePath, cancellationToken);
 
         logger.LogInformation($"Saved: {linkSrc}");
     }
@@ -292,7 +292,9 @@ public sealed class Scraper : IDisposable
         {
             logger.LogInformation($"Found anchor: {anchorHref}");
 
-            await ScrapeDocument(AsAbsoluteUrl(anchorHref), cancellationToken);
+            var uri = AsAbsoluteUrl(anchorHref);
+
+            await ScrapeDocument(uri, cancellationToken);
         }
     }
 
@@ -338,7 +340,7 @@ public sealed class Scraper : IDisposable
 
         CreateDirectory(destFilePath);
 
-        await stream.WriteToFileAsync(destFilePath);
+        await stream.WriteToFileAsync(destFilePath, cancellationToken);
 
         logger.LogInformation($"Saved: {imgSrc}");
     }
