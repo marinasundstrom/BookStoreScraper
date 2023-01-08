@@ -133,15 +133,12 @@ public sealed class Scraper : IDisposable
     {
         var scriptElements = document.QuerySelectorAll("script");
 
-        foreach (var scriptElement in scriptElements)
+        var scriptElementSrcs = scriptElements
+            .Select(scriptElement => scriptElement.GetAttribute("src")!)
+            .Where(scriptElementSrc => scriptElementSrc is not null);
+
+        foreach (var scriptElementSrc in scriptElementSrcs)
         {
-            var scriptElementSrc = scriptElement.GetAttribute("src");
-
-            if (scriptElementSrc is null)
-            {
-                continue;
-            }
-
             logger.LogInformation($"Found script: {scriptElementSrc}");
 
             if (scriptElementSrc.StartsWith("http")) continue;
@@ -175,15 +172,12 @@ public sealed class Scraper : IDisposable
     {
         var links = document.QuerySelectorAll("link");
 
-        foreach (var link in links)
+        var linkSrcs = links
+            .Select(link => link.GetAttribute("href")!)
+            .Where(linkSrc => linkSrc is not null);
+
+        foreach (var linkSrc in linkSrcs)
         {
-            var linkSrc = link.GetAttribute("href");
-
-            if (linkSrc is null)
-            {
-                continue;
-            }
-
             logger.LogInformation($"Found link: {linkSrc}");
 
             var uri = AsAbsoluteUrl(linkSrc);
@@ -210,15 +204,12 @@ public sealed class Scraper : IDisposable
     {
         var anchors = document.QuerySelectorAll(".sidebar a, :not(article.product_page) a"); // a
 
-        foreach (var anchor in anchors)
+        var anchorHrefs = anchors
+            .Select(anchor => anchor.GetAttribute("href")!)
+            .Where(anchorHref => anchorHref is not null);
+
+        foreach (var anchorHref in anchorHrefs)
         {
-            var anchorHref = anchor.GetAttribute("href");
-
-            if (anchorHref is null)
-            {
-                continue;
-            }
-
             logger.LogInformation($"Found anchor: {anchorHref}");
 
             await ScrapeDocument(AsAbsoluteUrl(anchorHref));
@@ -228,15 +219,13 @@ public sealed class Scraper : IDisposable
     private async Task ProcessImage(IDocument document)
     {
         var imgs = document.QuerySelectorAll("img");
-        foreach (var img in imgs)
+
+        var imgSrcs = imgs
+            .Select(img => img.GetAttribute("src")!)
+            .Where(imgSrc => imgSrc is not null);
+
+        foreach (var imgSrc in imgSrcs)
         {
-            var imgSrc = img.GetAttribute("src");
-
-            if (imgSrc is null)
-            {
-                continue;
-            }
-
             logger.LogInformation($"Found image: {imgSrc}");
 
             var uri = AsAbsoluteUrl(imgSrc);
