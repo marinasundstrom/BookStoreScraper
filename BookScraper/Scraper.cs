@@ -202,6 +202,8 @@ public sealed class Scraper : IDisposable
 
     private async Task ProcessAnchors(IDocument document)
     {
+        // INFO: Select links in Sidebar (Category links) + all links that are not on the Book page (i.e. not links in the "Recently viewed" section).
+
         var anchors = document.QuerySelectorAll(".sidebar a, :not(article.product_page) a"); // a
 
         var anchorHrefs = anchors
