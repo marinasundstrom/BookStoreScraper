@@ -67,7 +67,7 @@ public sealed class Scraper : IDisposable
 
         readPages.Add(url);
 
-        Navigate(url);
+        NavigateTo(url);
 
         logger.LogInformation($"Downloading {url}");
 
@@ -77,7 +77,7 @@ public sealed class Scraper : IDisposable
 
         if (document is null)
         {
-            PopStack();
+            GoBack();
             return;
         }
 
@@ -101,10 +101,10 @@ public sealed class Scraper : IDisposable
 
         await ProcessAnchors(document);
 
-        PopStack();
+        GoBack();
     }
 
-    private void Navigate(string url)
+    private void NavigateTo(string url)
     {
         if (currentUrl is not null)
         {
@@ -112,10 +112,10 @@ public sealed class Scraper : IDisposable
         }
         currentUrl = url;
 
-        logger.LogInformation($"Navigated to: {currentUrl}");
+        logger.LogInformation($"NavigateTod to: {currentUrl}");
     }
 
-    private void PopStack()
+    private void GoBack()
     {
         logger.LogInformation($"Leaving: {currentUrl}");
 
