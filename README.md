@@ -8,13 +8,15 @@ After running, check the "Output" directory, next to the executable, for the res
 
 ![Screenshot](screenshot.png)
 
-## Details 
+## Overview 
 
 The program downloads the full website (*). It fetches each page and scans for ```a```, ```link```, ```script``` and ```ìmg``` elements, and then downloads referenced files into the local file system. The files will retain their logical location and the site will be fully browsable from your computer without an Internet connection.
 
 Progress will be output to the console.
 
-### How it works
+## Details
+
+### Scraping
 
 It starts with the index page where you can paginate through the entire book collection, and there is a sidebar displaying all categories.
 
