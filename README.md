@@ -1,6 +1,6 @@
 ﻿# Book Scraper
 
-This project scrapes [Books to Scrape](http://books.toscrape.com/), and saves the content to the computer so that you can browse the site offline.
+Console app that scrapes [Books to Scrape](http://books.toscrape.com/), and saves the content to the computer so that you can browse the site offline.
 
 The project is coded in C#/.NET, and for HTML parsing it uses [AngleSharp](https://anglesharp.github.io/).
 
@@ -9,6 +9,8 @@ After running, check the "Output" directory, next to the executable, for the res
 ## Details 
 
 The program downloads the full website (*). It fetches each page and scans for ```a```, ```link```, ```script``` and ```ìmg``` elements, and then downloads referenced files into the local file system. The files will retain their logical location and the site will be fully browsable from your computer without an Internet connection.
+
+Progress will be output to the console.
 
 ### How it works
 
@@ -40,8 +42,20 @@ The assignment gave me the following insights:
 
 ## Possible improvements
 
+Here are some things that could be improved:
+
 * Finding out how to fetch _"FontAwesome"_ (a local file) which is referenced in the CSS files.
 
-* Enable parallel processing using pure functions, as well as other functional programming patterns. 
+* Enable parallel processing using functional programming patterns. 
 
-* Extract certain parts of the code, so it can be mockable and testable.
+* Extract certain parts of the code, make it mockable and testable.
+
+* Additional error handling and recovery
+
+* Benchmarking
+
+## Investigate
+
+Some points worth investigating:
+
+* How performant is the "readPages" HashSet solution? Memory allocations. How does it compare to just checking if a file exists in the file system with ```File.Exists(path)``` ? This method is used in some places.
