@@ -32,6 +32,12 @@ For URL resolving, the processor uses a history stack to keep track of the pages
 
 There is also a list of paths that have been processed which makes sure pages get processed only once during a run.
 
+### Error handling
+
+Progress and error messages are output to the console using the default logger. 
+
+At the end of the program, the names of the files that failed to download are saved to the file "failedDownloadsUris.txt". You can then check the log to see the reason why it failed.
+
 ## What I’ve learned
 
 The assignment gave me the following insights:
