@@ -24,6 +24,8 @@ Book pages are no different. But we make sure not to process any book links in t
 
 ### Design details
 
+[AngleSharp](https://anglesharp.github.io/) was chosen for HTML parsing, instead of alternatives as [HTML Agility Pack (HAP)](https://html-agility-pack.net/). AngleSharp is a fast parsing library provides an API that is closer to the browser's DOM API. It also uses native HTML tag selectors for selecting elements. By contrast, HAP uses XPath by default.
+
 For URL resolving, the processor uses a history stack to keep track of the pages where it has been.
 
 There is also a list of paths that have been processed which makes sure pages get processed only once during a run.
@@ -35,7 +37,6 @@ The assignment gave me the following insights:
 * How to manipulate URIs using the ```Uri``` class in combination with the ```Path``` class. Concatenating the base URI with path ```../``` using ```Path.Combine```.
 
 * Knowledge about how ```Directory.Create``` works: It creates the directories in the specified path if they don’t already exist.
-
 
 ## Possible improvements
 
