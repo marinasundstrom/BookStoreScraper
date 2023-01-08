@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using Microsoft.Extensions.Logging;
@@ -49,33 +50,40 @@ public sealed class Scraper : IDisposable
         Environment.CurrentDirectory = rootDirPath;
     }
 
-    public async Task Scrape()
+    public async Task Scrape(CancellationToken cancellationToken = default)
     {
-        string startPageUrl = $"{baseUrl}/index.html";
-
-        var timestampStart = Stopwatch.GetTimestamp();
-
-        await ScrapeDocument(startPageUrl);
-
-        var elapsedTime = Stopwatch.GetElapsedTime(timestampStart);
-
-        var hasErrors = failedDownloadsUris.Any();
-
-        if (hasErrors)
+        try
         {
-            logger.LogInformation($"Completed with errors in {elapsedTime}");
+            string startPageUrl = $"{baseUrl}/index.html";
 
-            HandleErrors(elapsedTime);
+            var timestampStart = Stopwatch.GetTimestamp();
+
+            await ScrapeDocument(startPageUrl, cancellationToken);
+
+            var elapsedTime = Stopwatch.GetElapsedTime(timestampStart);
+
+            var hasErrors = failedDownloadsUris.Any();
+
+            if (hasErrors)
+            {
+                logger.LogInformation($"Completed with errors in {elapsedTime}");
+
+                await HandleErrors(elapsedTime, cancellationToken);
+            }
+            else
+            {
+                logger.LogInformation($"Completed in {elapsedTime}");
+            }
+
+            hostApplicationLifetime.StopApplication();
         }
-        else
+        catch (TaskCanceledException exc)
         {
-            logger.LogInformation($"Completed in {elapsedTime}");
+            logger.LogInformation("The program was cancelled.");
         }
-
-        hostApplicationLifetime.StopApplication();
     }
 
-    private void HandleErrors(TimeSpan elapsedTime)
+    private async Task HandleErrors(TimeSpan elapsedTime, CancellationToken cancellationToken)
     {
         try
         {
@@ -83,12 +91,12 @@ public sealed class Scraper : IDisposable
         }
         catch { }
 
-        File.WriteAllLines(errorFilePath, failedDownloadsUris);
+        await File.WriteAllLinesAsync(errorFilePath, failedDownloadsUris, cancellationToken);
 
         logger.LogInformation($"Please check: {errorFilePath}");
     }
 
-    private async Task ScrapeDocument(string url)
+    private async Task ScrapeDocument(string url, CancellationToken cancellationToken)
     {
         var destFilePath = GetPath(url); 
 
@@ -108,16 +116,16 @@ public sealed class Scraper : IDisposable
         Stream stream;
         try
         {
-            stream = await DownloadFileAsStream(url);
+            stream = await DownloadFileAsStream(url, cancellationToken);
         }
-        catch (Exception exc)
+        catch (HttpRequestException exc)
         {
             failedDownloadsUris.Add(url);
             logger.LogError(exc, $"Failed to download: {url}");
             return;
         }
 
-        var document = await ParseDocument(url, stream);
+        var document = await ParseDocument(url, stream, cancellationToken);
 
         if (document is null)
         {
@@ -135,13 +143,13 @@ public sealed class Scraper : IDisposable
 
         logger.LogInformation($"Processing document");
 
-        await ProcessScripts(document);
+        await ProcessScripts(document, cancellationToken);
 
-        await ProcessLinks(document);
+        await ProcessLinks(document, cancellationToken);
 
-        await ProcessImages(document);
+        await ProcessImages(document, cancellationToken);
 
-        await ProcessAnchors(document);
+        await ProcessAnchors(document, cancellationToken);
 
         GoBack();
     }
@@ -171,7 +179,7 @@ public sealed class Scraper : IDisposable
         return UrlHelpers.AsAbsoluteUrl(baseUrl, currentUrl, relUrl);
     }
 
-    private async Task ProcessScripts(IDocument document)
+    private async Task ProcessScripts(IDocument document, CancellationToken cancellationToken)
     {
         var scriptElements = document.QuerySelectorAll("script");
 
@@ -181,11 +189,11 @@ public sealed class Scraper : IDisposable
 
         foreach (var scriptElementSrc in scriptElementSrcs)
         {
-            await ProcessScriptSrc(scriptElementSrc);
+            await ProcessScriptSrc(scriptElementSrc, cancellationToken);
         }
     }
 
-    private async Task ProcessScriptSrc(string scriptElementSrc)
+    private async Task ProcessScriptSrc(string scriptElementSrc, CancellationToken cancellationToken)
     {
         logger.LogInformation($"Found script: {scriptElementSrc}");
 
@@ -207,9 +215,9 @@ public sealed class Scraper : IDisposable
         Stream stream;
         try
         {
-            stream = await DownloadFileAsStream(uri);
+            stream = await DownloadFileAsStream(uri, cancellationToken);
         }
-        catch (Exception exc)
+        catch (HttpRequestException exc)
         {
             failedDownloadsUris.Add(uri);
             logger.LogError(exc, $"Failed to download: {uri}");
@@ -223,7 +231,7 @@ public sealed class Scraper : IDisposable
         logger.LogInformation($"Saved: {scriptElementSrc}");
     }
 
-    private async Task ProcessLinks(IDocument document)
+    private async Task ProcessLinks(IDocument document, CancellationToken cancellationToken)
     {
         var links = document.QuerySelectorAll("link");
 
@@ -233,11 +241,11 @@ public sealed class Scraper : IDisposable
 
         foreach (var linkHref in linkHrefs)
         {
-            await ProcessLinkHref(linkHref);
+            await ProcessLinkHref(linkHref, cancellationToken);
         }
     }
 
-    private async Task ProcessLinkHref(string linkSrc)
+    private async Task ProcessLinkHref(string linkSrc, CancellationToken cancellationToken)
     {
         logger.LogInformation($"Found link: {linkSrc}");
 
@@ -254,9 +262,9 @@ public sealed class Scraper : IDisposable
         Stream stream;
         try
         {
-            stream = await DownloadFileAsStream(uri);
+            stream = await DownloadFileAsStream(uri, cancellationToken);
         }
-        catch (Exception exc)
+        catch (HttpRequestException exc)
         {
             failedDownloadsUris.Add(uri);
             logger.LogError(exc, $"Failed to download: {uri}");
@@ -270,7 +278,7 @@ public sealed class Scraper : IDisposable
         logger.LogInformation($"Saved: {linkSrc}");
     }
 
-    private async Task ProcessAnchors(IDocument document)
+    private async Task ProcessAnchors(IDocument document, CancellationToken cancellationToken)
     {
         // INFO: Select links in Sidebar (Category links) + all links that are not on the Book page (i.e. not links in the "Recently viewed" section).
 
@@ -284,11 +292,11 @@ public sealed class Scraper : IDisposable
         {
             logger.LogInformation($"Found anchor: {anchorHref}");
 
-            await ScrapeDocument(AsAbsoluteUrl(anchorHref));
+            await ScrapeDocument(AsAbsoluteUrl(anchorHref), cancellationToken);
         }
     }
 
-    private async Task ProcessImages(IDocument document)
+    private async Task ProcessImages(IDocument document, CancellationToken cancellationToken)
     {
         var imgs = document.QuerySelectorAll("img");
 
@@ -298,11 +306,11 @@ public sealed class Scraper : IDisposable
 
         foreach (var imgSrc in imgSrcs)
         {
-            await ProcessImageSrc(imgSrc);
+            await ProcessImageSrc(imgSrc, cancellationToken);
         }
     }
 
-    private async Task ProcessImageSrc(string imgSrc)
+    private async Task ProcessImageSrc(string imgSrc, CancellationToken cancellationToken)
     {
         logger.LogInformation($"Found image: {imgSrc}");
 
@@ -319,9 +327,9 @@ public sealed class Scraper : IDisposable
         Stream stream;
         try
         {
-            stream = await DownloadFileAsStream(uri);
+            stream = await DownloadFileAsStream(uri, cancellationToken);
         }
-        catch (Exception exc)
+        catch (HttpRequestException exc)
         {
             failedDownloadsUris.Add(uri);
             logger.LogError(exc, $"Failed to download: {uri}");
@@ -337,11 +345,11 @@ public sealed class Scraper : IDisposable
 
     #endregion
 
-    async Task<Stream> DownloadFileAsStream(string url)
+    async Task<Stream> DownloadFileAsStream(string url, CancellationToken cancellationToken)
     {
         logger.LogInformation($"Downloading: {url}");
 
-        var stream = await httpClient.GetStreamAsync(url);
+        var stream = await httpClient.GetStreamAsync(url, cancellationToken);
 
         var memoryStream = new MemoryStream();
         await stream.CopyToAsync(memoryStream);
@@ -351,7 +359,7 @@ public sealed class Scraper : IDisposable
         return memoryStream;
     }
 
-    async Task<IDocument?> ParseDocument(string url, Stream stream)
+    async Task<IDocument?> ParseDocument(string url, Stream stream, CancellationToken cancellationToken)
     {
         var config = Configuration.Default.WithDefaultLoader();
 
@@ -359,7 +367,7 @@ public sealed class Scraper : IDisposable
 
         return await context.OpenAsync(res => res
             .Content(stream)
-            .Address(url));
+            .Address(url), cancellationToken);
     }
 
     private static string GetPath(string uri)

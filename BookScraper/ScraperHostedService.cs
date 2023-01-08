@@ -9,7 +9,7 @@
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await scraper.Scrape();
+        await scraper.Scrape(cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
