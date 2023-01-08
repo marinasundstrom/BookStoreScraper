@@ -15,6 +15,8 @@ public sealed class Scraper : IDisposable
     private string baseUrl = "http://books.toscrape.com";
     private string rootDirPath;
 
+    private string outputFolder = "Output";
+
     private string currentUrl;
     private Stack<string> history = new Stack<string>();
 
@@ -31,7 +33,6 @@ public sealed class Scraper : IDisposable
     private void SetupDirectoryStructure()
     {
         var assemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        var outputFolder = "Output";
 
         rootDirPath = Path.Combine(assemblyLocation, outputFolder);
 
@@ -54,9 +55,7 @@ public sealed class Scraper : IDisposable
 
     private async Task ScrapeDocument(string url)
     {
-        var uri = new Uri(url);
-
-        var outputPath = uri.LocalPath[1..];
+        var destFilePath = GetPath(url); 
 
         if (readPages.Contains(url))
         {
@@ -83,13 +82,9 @@ public sealed class Scraper : IDisposable
 
         stream.Seek(0, SeekOrigin.Begin);
 
-        string dir;
-        if (!string.IsNullOrEmpty(dir = Path.GetDirectoryName(outputPath!)))
-        {
-            Directory.CreateDirectory(dir);
-        }
+        CreateDirectory(destFilePath);
 
-        await stream.WriteToFileAsync(outputPath);
+        await stream.WriteToFileAsync(destFilePath);
 
         logger.LogInformation($"Processing document");
 
@@ -97,11 +92,26 @@ public sealed class Scraper : IDisposable
 
         await ProcessLinks(document);
 
-        await ProcessImage(document);
+        await ProcessImages(document);
 
         await ProcessAnchors(document);
 
         GoBack();
+    }
+
+    private static string GetPath(string uri)
+    {
+        return new Uri(uri).LocalPath[1..];
+    }
+
+    private static void CreateDirectory(string filePath)
+    {
+        string? dir = Path.GetDirectoryName(filePath!);
+
+        if (!string.IsNullOrEmpty(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
     }
 
     private void NavigateTo(string url)
@@ -139,33 +149,36 @@ public sealed class Scraper : IDisposable
 
         foreach (var scriptElementSrc in scriptElementSrcs)
         {
-            logger.LogInformation($"Found script: {scriptElementSrc}");
-
-            if (scriptElementSrc.StartsWith("http")) continue;
-
-            var uri = AsAbsoluteUrl(scriptElementSrc);
-
-            var f = GetPath(uri);
-
-            if (File.Exists(f))
-            {
-                logger.LogInformation($"Already exists: {scriptElementSrc}");
-                continue;
-            }
-
-            Stream stream = await DownloadFileAsStream(uri);
-
-            Directory.CreateDirectory(Path.GetDirectoryName(f));
-
-            await stream.WriteToFileAsync(f);
-
-            logger.LogInformation($"Saved: {scriptElementSrc}");
+            await ProcessScript(scriptElementSrc);
         }
     }
 
-    private static string GetPath(string uri)
+    private async Task ProcessScript(string scriptElementSrc)
     {
-        return new Uri(uri).LocalPath[1..];
+        logger.LogInformation($"Found script: {scriptElementSrc}");
+
+        // INFO: Ignore files not hosted on the server
+
+        if (scriptElementSrc.StartsWith("http"))
+            return;
+
+        var uri = AsAbsoluteUrl(scriptElementSrc);
+
+        var destFilePath = GetPath(uri);
+
+        if (File.Exists(destFilePath))
+        {
+            logger.LogInformation($"Already exists: {scriptElementSrc}");
+            return;
+        }
+
+        Stream stream = await DownloadFileAsStream(uri);
+
+        CreateDirectory(destFilePath);
+
+        await stream.WriteToFileAsync(destFilePath);
+
+        logger.LogInformation($"Saved: {scriptElementSrc}");
     }
 
     private async Task ProcessLinks(IDocument document)
@@ -178,26 +191,31 @@ public sealed class Scraper : IDisposable
 
         foreach (var linkSrc in linkSrcs)
         {
-            logger.LogInformation($"Found link: {linkSrc}");
-
-            var uri = AsAbsoluteUrl(linkSrc);
-
-            var f = GetPath(uri);
-
-            if (File.Exists(f))
-            {
-                logger.LogInformation($"Already exists: {linkSrc}");
-                continue;
-            }
-
-            Stream stream = await DownloadFileAsStream(uri);
-
-            Directory.CreateDirectory(Path.GetDirectoryName(f));
-
-            await stream.WriteToFileAsync(f);
-
-            logger.LogInformation($"Saved: {linkSrc}");
+            await ProcessLink(linkSrc);
         }
+    }
+
+    private async Task ProcessLink(string linkSrc)
+    {
+        logger.LogInformation($"Found link: {linkSrc}");
+
+        var uri = AsAbsoluteUrl(linkSrc);
+
+        var destFilePath = GetPath(uri);
+
+        if (File.Exists(destFilePath))
+        {
+            logger.LogInformation($"Already exists: {linkSrc}");
+            return;
+        }
+
+        Stream stream = await DownloadFileAsStream(uri);
+
+        CreateDirectory(destFilePath);
+
+        await stream.WriteToFileAsync(destFilePath);
+
+        logger.LogInformation($"Saved: {linkSrc}");
     }
 
     private async Task ProcessAnchors(IDocument document)
@@ -218,7 +236,7 @@ public sealed class Scraper : IDisposable
         }
     }
 
-    private async Task ProcessImage(IDocument document)
+    private async Task ProcessImages(IDocument document)
     {
         var imgs = document.QuerySelectorAll("img");
 
@@ -228,26 +246,31 @@ public sealed class Scraper : IDisposable
 
         foreach (var imgSrc in imgSrcs)
         {
-            logger.LogInformation($"Found image: {imgSrc}");
-
-            var uri = AsAbsoluteUrl(imgSrc);
-
-            var f = GetPath(uri);
-
-            if (File.Exists(f))
-            {
-                logger.LogInformation($"Already exists: {imgSrc}");
-                continue;
-            }
-
-            Stream stream = await DownloadFileAsStream(uri);
-
-            Directory.CreateDirectory(Path.GetDirectoryName(f));
-
-            await stream.WriteToFileAsync(f);
-
-            logger.LogInformation($"Saved: {imgSrc}");
+            await ProcessImage(imgSrc);
         }
+    }
+
+    private async Task ProcessImage(string imgSrc)
+    {
+        logger.LogInformation($"Found image: {imgSrc}");
+
+        var uri = AsAbsoluteUrl(imgSrc);
+
+        var destFilePath = GetPath(uri);
+
+        if (File.Exists(destFilePath))
+        {
+            logger.LogInformation($"Already exists: {imgSrc}");
+            return;
+        }
+
+        Stream stream = await DownloadFileAsStream(uri);
+
+        CreateDirectory(destFilePath);
+
+        await stream.WriteToFileAsync(destFilePath);
+
+        logger.LogInformation($"Saved: {imgSrc}");
     }
 
     #endregion
