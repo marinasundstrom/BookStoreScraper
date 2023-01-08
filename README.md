@@ -36,8 +36,6 @@ Book pages are no different. But we make sure not to process any book links in t
 
 For URL resolving, the processor uses a history stack to keep track of the pages where it has been.
 
-There is also a list of paths that have been processed which makes sure pages get processed only once during a run.
-
 ### Error handling
 
 Error messages are output to the console using the default logger. 
@@ -66,9 +64,3 @@ Here are some things that could be improved:
 * Additional error handling and recovery
 
 * Benchmarking to find alternative efficient ways of doing stuff - minimize memory allocations, and again, speed up execution.
-
-## Investigate
-
-Some points worth investigating:
-
-* How performant is the "readPages" HashSet solution? Memory allocations. How does it compare to just checking if a file exists in the file system with ```File.Exists(path)``` ? This method is used in some places.

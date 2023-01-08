@@ -11,20 +11,19 @@ public sealed class Scraper : IDisposable
     private readonly ILogger<Scraper> logger;
     private readonly IHostApplicationLifetime hostApplicationLifetime;
 
-    private HttpClient httpClient = new();
+    private readonly HttpClient httpClient = new();
 
-    private string baseUrl = "http://books.toscrape.com";
+    private const string baseUrl = "http://books.toscrape.com";
     private string rootDirPath = default!;
 
-    private string outputFolder = "Output";
+    private const string outputFolder = "Output";
 
-    private string errorFilePath = "failedDownloadsUris.txt";
+    private const string errorFilePath = "failedDownloadsUris.txt";
 
     private string currentUrl = default!;
-    private Stack<string> history = new Stack<string>();
+    private readonly Stack<string> history = new Stack<string>();
 
-    private HashSet<string> readPages = new HashSet<string>();
-    private HashSet<string> failedDownloadsUris = new HashSet<string>();
+    private readonly HashSet<string> failedDownloadsUris = new HashSet<string>();
 
     public Scraper(ILogger<Scraper> logger, IHostApplicationLifetime hostApplicationLifetime)
     {
@@ -98,16 +97,13 @@ public sealed class Scraper : IDisposable
 
     private async Task ScrapeDocument(string url, CancellationToken cancellationToken)
     {
-        var destFilePath = GetPath(url); 
+        var destFilePath = GetPath(url);
 
-        if (readPages.Contains(url))
+        if (File.Exists(destFilePath))
         {
             logger.LogInformation($"Already exists: {url}");
-
             return;
         }
-
-        readPages.Add(url);
 
         NavigateTo(url);
 
@@ -143,11 +139,10 @@ public sealed class Scraper : IDisposable
 
         logger.LogInformation($"Processing document");
 
-        await ProcessScripts(document, cancellationToken);
-
-        await ProcessLinks(document, cancellationToken);
-
-        await ProcessImages(document, cancellationToken);
+        await Task.WhenAll(
+            Task.Run(async () => await ProcessScripts(document, cancellationToken), cancellationToken),
+            Task.Run(async () => await ProcessLinks(document, cancellationToken), cancellationToken),
+            Task.Run(async () => await ProcessImages(document, cancellationToken), cancellationToken));
 
         await ProcessAnchors(document, cancellationToken);
 
@@ -186,6 +181,11 @@ public sealed class Scraper : IDisposable
         var scriptElementSrcs = scriptElements
             .Select(scriptElement => scriptElement.GetAttribute("src")!)
             .Where(scriptElementSrc => scriptElementSrc is not null);
+
+        if (!scriptElementSrcs.Any())
+        {
+            return;
+        }
 
         foreach (var scriptElementSrc in scriptElementSrcs)
         {
@@ -239,6 +239,11 @@ public sealed class Scraper : IDisposable
             .Select(link => link.GetAttribute("href")!)
             .Where(linkHref => linkHref is not null);
 
+        if (!linkHrefs.Any())
+        {
+            return;
+        }
+
         foreach (var linkHref in linkHrefs)
         {
             await ProcessLinkHref(linkHref, cancellationToken);
@@ -288,6 +293,11 @@ public sealed class Scraper : IDisposable
             .Select(anchor => anchor.GetAttribute("href")!)
             .Where(anchorHref => anchorHref is not null);
 
+        if (!anchorHrefs.Any())
+        {
+            return;
+        }
+
         foreach (var anchorHref in anchorHrefs)
         {
             logger.LogInformation($"Found anchor: {anchorHref}");
@@ -300,16 +310,23 @@ public sealed class Scraper : IDisposable
 
     private async Task ProcessImages(IDocument document, CancellationToken cancellationToken)
     {
-        var imgs = document.QuerySelectorAll("img");
+        // INFO: Select images in index pages, category pages, and product pages (but not in the "Recently viewed" section)
+
+        var imgs = document.QuerySelectorAll(".product_pod img, article.product_page .carousel-inner img");
 
         var imgSrcs = imgs
             .Select(img => img.GetAttribute("src")!)
             .Where(imgSrc => imgSrc is not null);
 
-        foreach (var imgSrc in imgSrcs)
+        if (!imgSrcs.Any())
         {
-            await ProcessImageSrc(imgSrc, cancellationToken);
+            return;
         }
+
+        var processTasks = imgSrcs.Select(imgSrc =>
+            ProcessImageSrc(imgSrc, cancellationToken));
+
+        await Task.WhenAll(processTasks);
     }
 
     private async Task ProcessImageSrc(string imgSrc, CancellationToken cancellationToken)
