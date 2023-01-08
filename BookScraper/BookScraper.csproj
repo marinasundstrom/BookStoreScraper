@@ -10,5 +10,12 @@
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="0.17.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Processors\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Processors\" />
   </ItemGroup>
 </Project>
