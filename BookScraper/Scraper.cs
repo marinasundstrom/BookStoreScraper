@@ -146,21 +146,6 @@ public sealed class Scraper : IDisposable
         GoBack();
     }
 
-    private static string GetPath(string uri)
-    {
-        return new Uri(uri).LocalPath[1..];
-    }
-
-    private static void CreateDirectory(string filePath)
-    {
-        string? dir = Path.GetDirectoryName(filePath!);
-
-        if (!string.IsNullOrEmpty(dir))
-        {
-            Directory.CreateDirectory(dir);
-        }
-    }
-
     private void NavigateTo(string url)
     {
         if (currentUrl is not null)
@@ -375,6 +360,21 @@ public sealed class Scraper : IDisposable
         return await context.OpenAsync(res => res
             .Content(stream)
             .Address(url));
+    }
+
+    private static string GetPath(string uri)
+    {
+        return new Uri(uri).LocalPath[1..];
+    }
+
+    private static void CreateDirectory(string filePath)
+    {
+        string? dir = Path.GetDirectoryName(filePath!);
+
+        if (!string.IsNullOrEmpty(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
     }
 
     public void Dispose()
