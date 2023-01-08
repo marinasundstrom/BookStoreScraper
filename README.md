@@ -6,6 +6,8 @@ The project is coded in C#/.NET, and for HTML parsing it uses [AngleSharp](https
 
 After running, check the "Output" directory, next to the executable, for the result.
 
+![Screenshot](screenshot.png)
+
 ## Details 
 
 The program downloads the full website (*). It fetches each page and scans for ```a```, ```link```, ```script``` and ```ìmg``` elements, and then downloads referenced files into the local file system. The files will retain their logical location and the site will be fully browsable from your computer without an Internet connection.
@@ -34,7 +36,7 @@ There is also a list of paths that have been processed which makes sure pages ge
 
 ### Error handling
 
-Progress and error messages are output to the console using the default logger. 
+Error messages are output to the console using the default logger. 
 
 At the end of the program, the names of the files that failed to download are saved to the file "failedDownloadsUris.txt". You can then check the log to see the reason why it failed.
 
