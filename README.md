@@ -24,7 +24,7 @@ Book pages are no different. But we make sure not to process any book links in t
 
 ### Design details
 
-[AngleSharp](https://anglesharp.github.io/) was chosen for HTML parsing, instead of alternatives as [HTML Agility Pack (HAP)](https://html-agility-pack.net/). AngleSharp is a fast parsing library provides an API that is closer to the browser's DOM API. It also uses native HTML tag selectors for selecting elements. By contrast, HAP uses XPath by default.
+[AngleSharp](https://anglesharp.github.io/) was chosen for HTML parsing, instead of alternatives as [HTML Agility Pack (HAP)](https://html-agility-pack.net/). AngleSharp is a fast parsing library that provides an API that is closer to the browser's DOM API. It also uses native HTML tag selectors for selecting elements. By contrast, HAP uses XPath by default.
 
 For URL resolving, the processor uses a history stack to keep track of the pages where it has been.
 
