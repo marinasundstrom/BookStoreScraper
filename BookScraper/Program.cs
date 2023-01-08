@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using BookScraper;
+using Microsoft.Extensions.Logging;
 
 var builder = Host.CreateApplicationBuilder();
 

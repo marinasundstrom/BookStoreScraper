@@ -1,4 +1,6 @@
-﻿public static class UrlHelpers
+﻿namespace BookScraper;
+
+public static class UrlHelpers
 {
     public static string AsAbsoluteUrl(string baseUrl, string currentUrl, string relUrl)
     {

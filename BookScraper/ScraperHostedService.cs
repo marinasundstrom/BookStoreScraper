@@ -1,4 +1,7 @@
-﻿internal sealed class ScraperHostedService : IHostedService
+﻿
+namespace BookScraper;
+
+internal sealed class ScraperHostedService : IHostedService
 {
     private readonly Scraper scraper;
 

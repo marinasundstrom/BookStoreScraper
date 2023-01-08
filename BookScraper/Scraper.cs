@@ -1,10 +1,10 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
-using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using Microsoft.Extensions.Logging;
+
+namespace BookScraper;
 
 public sealed class Scraper : IDisposable
 {
