@@ -56,8 +56,8 @@ Here are some things that could be improved:
 
 * Enable parallel processing using functional programming patterns. 
 
-* Extract certain parts of the code, make it mockable and testable.
-    * Make the document scraper and each "processor" (for Script, Anchor, Link, Img) their own isolated classes.
+* Extract certain parts of the code into their own units to make them testable.
+    * Make the document scraper and each "processor" (for Script, Anchor, Link, Img) their own classes.
 
 * Additional error handling and recovery
 
