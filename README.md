@@ -2,7 +2,9 @@
 
 This project scrapes [Books to Scrape](http://books.toscrape.com/), and saves the content to the computer so that you can browse the site offline.
 
-The project is coded in C#/.NET and for HTML parsing it uses [AngleSharp](https://anglesharp.github.io/).
+The project is coded in C#/.NET, and for HTML parsing it uses [AngleSharp](https://anglesharp.github.io/).
+
+After running, check the "Output" directory, next to the executable, for the result.
 
 ## Details 
 
@@ -14,7 +16,7 @@ It starts with the index page where you can paginate through the entire book col
 
 First, the program downloads all the static assets (CSS, JavaScript and images). It makes sure just to download them once. JavaScript which are hosted at another place will not be downloaded.
 
-We scan the current page for anchor elements (```a``` element). That leads the next page that is going to be scraped. In principle, each page is processed the same way, be it an index page, a category page, or a book page. And a page is only downloaded and processed once.
+We scan the current page for anchor elements (```a``` element). That leads to the next page that is going to be scraped. In principle, each page is processed the same way, be it an index page, a category page, or a book page. And a page is only downloaded and processed once.
 
 The main element of interest on the index page is the sidebar containing the categories, so we make sure to prioritize those links, the pages, and contents on them.
 
