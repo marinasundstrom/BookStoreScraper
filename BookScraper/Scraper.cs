@@ -12,11 +12,11 @@ public sealed class Scraper : IDisposable
     private HttpClient httpClient = new();
 
     private string baseUrl = "http://books.toscrape.com";
-    private string rootDirPath;
+    private string rootDirPath = default!;
 
     private string outputFolder = "Output";
 
-    private string currentUrl;
+    private string currentUrl = default!;
     private Stack<string> history = new Stack<string>();
 
     private HashSet<string> readPages = new HashSet<string>();
@@ -156,11 +156,11 @@ public sealed class Scraper : IDisposable
 
         foreach (var scriptElementSrc in scriptElementSrcs)
         {
-            await ProcessScript(scriptElementSrc);
+            await ProcessScriptSrc(scriptElementSrc);
         }
     }
 
-    private async Task ProcessScript(string scriptElementSrc)
+    private async Task ProcessScriptSrc(string scriptElementSrc)
     {
         logger.LogInformation($"Found script: {scriptElementSrc}");
 
@@ -192,17 +192,17 @@ public sealed class Scraper : IDisposable
     {
         var links = document.QuerySelectorAll("link");
 
-        var linkSrcs = links
+        var linkHrefs = links
             .Select(link => link.GetAttribute("href")!)
-            .Where(linkSrc => linkSrc is not null);
+            .Where(linkHref => linkHref is not null);
 
-        foreach (var linkSrc in linkSrcs)
+        foreach (var linkHref in linkHrefs)
         {
-            await ProcessLink(linkSrc);
+            await ProcessLinkHref(linkHref);
         }
     }
 
-    private async Task ProcessLink(string linkSrc)
+    private async Task ProcessLinkHref(string linkSrc)
     {
         logger.LogInformation($"Found link: {linkSrc}");
 
@@ -253,11 +253,11 @@ public sealed class Scraper : IDisposable
 
         foreach (var imgSrc in imgSrcs)
         {
-            await ProcessImage(imgSrc);
+            await ProcessImageSrc(imgSrc);
         }
     }
 
-    private async Task ProcessImage(string imgSrc)
+    private async Task ProcessImageSrc(string imgSrc)
     {
         logger.LogInformation($"Found image: {imgSrc}");
 

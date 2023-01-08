@@ -2,9 +2,6 @@
 
 public class UrlHelpersTest
 {
-    string baseUrl = "http://books.toscrape.com";
-    string currentUrl = "http://books.toscrape.com/test";
-
     [Fact]
     public void Test1()
     {
