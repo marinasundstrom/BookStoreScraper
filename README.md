@@ -56,14 +56,14 @@ Here are some things that could be improved:
 
 * Finding out how to fetch _"FontAwesome"_ (a local file) which is referenced in the CSS files.
 
-* Enable parallel processing using functional programming patterns. 
+* Enable parallel processing using functional programming patterns. It would cut execution time.
 
 * Extract certain parts of the code into their own units to make them testable.
     * Make the document scraper and each "processor" (for Script, Anchor, Link, Img) their own classes.
 
 * Additional error handling and recovery
 
-* Benchmarking
+* Benchmarking to find alternative efficient ways of doing stuff - minimize memory allocations, and again, speed up execution.
 
 ## Investigate
 
