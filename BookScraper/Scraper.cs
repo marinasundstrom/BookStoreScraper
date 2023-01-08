@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using AngleSharp;
 using AngleSharp.Dom;
@@ -16,10 +17,13 @@ public sealed class Scraper : IDisposable
 
     private string outputFolder = "Output";
 
+    private string errorFilePath = "failedDownloadsUris.txt";
+
     private string currentUrl = default!;
     private Stack<string> history = new Stack<string>();
 
     private HashSet<string> readPages = new HashSet<string>();
+    private HashSet<string> failedDownloadsUris = new HashSet<string>();
 
     public Scraper(ILogger<Scraper> logger, IHostApplicationLifetime hostApplicationLifetime)
     {
@@ -55,9 +59,33 @@ public sealed class Scraper : IDisposable
 
         var elapsedTime = Stopwatch.GetElapsedTime(timestampStart);
 
-        logger.LogInformation($"Completed in {elapsedTime}");
+        var hasErrors = failedDownloadsUris.Any();
+
+        if (hasErrors)
+        {
+            logger.LogInformation($"Completed with errors in {elapsedTime}");
+
+            HandleErrors(elapsedTime);
+        }
+        else
+        {
+            logger.LogInformation($"Completed in {elapsedTime}");
+        }
 
         hostApplicationLifetime.StopApplication();
+    }
+
+    private void HandleErrors(TimeSpan elapsedTime)
+    {
+        try
+        {
+            File.Delete(errorFilePath);
+        }
+        catch { }
+
+        File.WriteAllLines(errorFilePath, failedDownloadsUris);
+
+        logger.LogInformation($"Please check: {errorFilePath}");
     }
 
     private async Task ScrapeDocument(string url)
@@ -77,12 +105,24 @@ public sealed class Scraper : IDisposable
 
         logger.LogInformation($"Downloading: {url}");
 
-        var stream = await DownloadFileAsStream(url);
+        Stream stream;
+        try
+        {
+            stream = await DownloadFileAsStream(url);
+        }
+        catch (Exception exc)
+        {
+            failedDownloadsUris.Add(url);
+            logger.LogError(exc, $"Failed to download: {url}");
+            return;
+        }
 
         var document = await ParseDocument(url, stream);
 
         if (document is null)
         {
+            logger.LogInformation("No content");
+
             GoBack();
             return;
         }
@@ -129,7 +169,7 @@ public sealed class Scraper : IDisposable
         }
         currentUrl = url;
 
-        logger.LogInformation($"NavigateTod to: {currentUrl}");
+        logger.LogInformation($"Navigated to: {currentUrl}");
     }
 
     private void GoBack()
@@ -179,7 +219,17 @@ public sealed class Scraper : IDisposable
             return;
         }
 
-        Stream stream = await DownloadFileAsStream(uri);
+        Stream stream;
+        try
+        {
+            stream = await DownloadFileAsStream(uri);
+        }
+        catch (Exception exc)
+        {
+            failedDownloadsUris.Add(uri);
+            logger.LogError(exc, $"Failed to download: {uri}");
+            return;
+        }
 
         CreateDirectory(destFilePath);
 
@@ -216,7 +266,17 @@ public sealed class Scraper : IDisposable
             return;
         }
 
-        Stream stream = await DownloadFileAsStream(uri);
+        Stream stream;
+        try
+        {
+            stream = await DownloadFileAsStream(uri);
+        }
+        catch (Exception exc)
+        {
+            failedDownloadsUris.Add(uri);
+            logger.LogError(exc, $"Failed to download: {uri}");
+            return;
+        }
 
         CreateDirectory(destFilePath);
 
@@ -271,7 +331,17 @@ public sealed class Scraper : IDisposable
             return;
         }
 
-        Stream stream = await DownloadFileAsStream(uri);
+        Stream stream;
+        try
+        {
+            stream = await DownloadFileAsStream(uri);
+        }
+        catch (Exception exc)
+        {
+            failedDownloadsUris.Add(uri);
+            logger.LogError(exc, $"Failed to download: {uri}");
+            return;
+        }
 
         CreateDirectory(destFilePath);
 
