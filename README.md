@@ -52,6 +52,12 @@ The assignment gave me the following insights:
 
 * Knowledge about how ```Directory.Create``` works: It creates the directories in the specified path if they don’t already exist.
 
+* File paths are specific to the operating system - different rules and prefereed path separators on MacOS, Windows, and Linux. This is not news, but it should be taken into account, for instance, when doing path manipulation using file paths.
+
+If you are building cross-platform apps:
+
+* Test your app on other platforms - not just your own. This app what developed on a Mac, and crashed on Windows because of the reason described above.
+
 ## Possible improvements
 
 Here are some things that could be improved:
