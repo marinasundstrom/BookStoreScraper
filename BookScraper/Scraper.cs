@@ -42,9 +42,10 @@ public sealed class Scraper : IDisposable
         try
         {
             Directory.Delete(rootDirPath, true);
-            Directory.CreateDirectory(rootDirPath);
         }
-        catch (IOException) { throw; }
+        catch (DirectoryNotFoundException) { }
+
+        Directory.CreateDirectory(rootDirPath);
 
         Environment.CurrentDirectory = rootDirPath;
     }
