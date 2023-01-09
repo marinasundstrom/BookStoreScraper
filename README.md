@@ -8,7 +8,7 @@ After running, check the "Output" directory, next to the executable, for the res
 
 Check [issues](https://github.com/marinasundstrom/BookStoreScraper/issues) for notes.
 
-Refactoring (#1) is on-going in [develop](https://github.com/marinasundstrom/BookStoreScraper/tree/develop) branch.
+Refactoring ([#1](https://github.com/marinasundstrom/BookStoreScraper/issues/1)) is on-going in [develop](https://github.com/marinasundstrom/BookStoreScraper/tree/develop) branch.
 
 ![Screenshot](screenshot.png)
 
