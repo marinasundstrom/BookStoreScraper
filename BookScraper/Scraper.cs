@@ -391,7 +391,9 @@ public sealed class Scraper : IDisposable
 
     private static string GetPath(string uri)
     {
-        return new Uri(uri).LocalPath[1..];
+        var firstSlash = uri.IndexOf('/');
+        var index = firstSlash + 2;
+        return uri[index..];
     }
 
     private static void CreateDirectory(string filePath)
