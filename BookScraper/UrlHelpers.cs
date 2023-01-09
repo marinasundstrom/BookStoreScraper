@@ -10,8 +10,9 @@ public static class UrlHelpers
         }
 
         var directory = Path.GetDirectoryName(new Uri(currentUrl).LocalPath);
-        var url = $"{baseUrl}{directory}";
+        var url = $"{baseUrl}{directory}".Replace('\\', '/');
 
+        relUrl = relUrl.Replace('\\', '/');
         return new Uri(Path.Combine(url, relUrl)).AbsoluteUri;
     }
 }
