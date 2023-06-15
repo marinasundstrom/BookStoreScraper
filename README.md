@@ -18,6 +18,10 @@ The program downloads the full website (*). It fetches each page and scans for `
 
 Progress will be output to the console.
 
+### Directive
+
+To properly implement the solution, but not make it too complex for the task to be solved. Following general practices and implement sufficient error handling. The program should generally not fail or crash without hinting a reason.
+
 ## Details
 
 ### Scraping
